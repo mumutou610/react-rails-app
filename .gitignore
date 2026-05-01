@@ -1,0 +1,39 @@
+# ========================
+# Rails (api/)
+# ========================
+api/.bundle
+api/log/*
+api/tmp/*
+api/storage/*
+api/public/assets
+api/public/packs
+api/node_modules
+api/.env
+api/.env.*
+!api/.env.example
+
+# Rails credentials / secrets
+api/config/credentials/*.key
+api/config/master.key
+
+# Rails coverage
+api/coverage/
+
+# ========================
+# React / Node (front/)
+# ========================
+front/node_modules
+front/dist
+front/.env
+front/.env.*
+!front/.env.example
+
+# ========================
+# OS / Editor
+# ========================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+*.iml

@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  description: MyString
+  eaten_at: 2026-04-30
+  memo: MyText
+  ai_feedback: MyText
+
+two:
+  description: MyString
+  eaten_at: 2026-04-30
+  memo: MyText
+  ai_feedback: MyText

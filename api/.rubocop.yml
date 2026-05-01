@@ -1,0 +1,31 @@
+inherit_gem:
+  rubocop-rails-omakase: rubocop.yml
+
+plugins:
+  - rubocop-rspec
+
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 3.2
+  Exclude:
+    - 'bin/**/*'
+    - 'db/schema.rb'
+    - 'db/migrate/**/*'
+    - 'config/**/*'
+    - 'node_modules/**/*'
+    - 'vendor/**/*'
+
+# 日本語コメントを許可
+Style/AsciiComments:
+  Enabled: false
+
+# 日本語の context 説明を許可
+RSpec/ContextWording:
+  Enabled: false
+
+# specファイルはexampleの長さを緩める
+RSpec/ExampleLength:
+  Max: 10
+
+RSpec/MultipleExpectations:
+  Max: 3
