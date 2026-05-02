@@ -2,10 +2,15 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { fetchMeal, createMeal, updateMeal } from '../api/meals'
 import type { MealFormData } from '../types/meal'
+import type { FlashType } from '../App'
+
+type Props = {
+  showFlash: (messages: string[], type?: FlashType) => void
+}
 
 const today = (): string => new Date().toISOString().split('T')[0]
 
-function MealForm() {
+function MealForm({ showFlash }: Props) {
   const { id } = useParams<{ id: string }>()
   const isEdit = Boolean(id)
   const navigate = useNavigate()
@@ -15,7 +20,6 @@ function MealForm() {
     eaten_at: today(),
     memo: '',
   })
-  const [errors, setErrors] = useState<string[]>([])
   const [loading, setLoading] = useState(isEdit)
   const [saving, setSaving] = useState(false)
 
@@ -40,19 +44,19 @@ function MealForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
-    setErrors([])
     try {
       const res = id
         ? await updateMeal(id, form)
         : await createMeal(form)
 
       if ('errors' in res) {
-        setErrors(res.errors)
+        showFlash(res.errors, 'error')
       } else {
+        showFlash([isEdit ? '食事記録を更新しました' : '食事記録を追加しました'], 'success')
         navigate('/meals')
       }
     } catch {
-      setErrors(['通信エラーが発生しました。再度お試しください。'])
+      showFlash(['通信エラーが発生しました。再度お試しください。'], 'error')
     } finally {
       setSaving(false)
     }
@@ -80,14 +84,6 @@ function MealForm() {
           {isEdit ? '食事を編集' : '食事を追加'}
         </h2>
       </div>
-
-      {errors.length > 0 && (
-        <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl p-4 mb-5">
-          {errors.map((err) => (
-            <p key={err}>・{err}</p>
-          ))}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div>

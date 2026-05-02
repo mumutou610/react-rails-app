@@ -1,12 +1,12 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import type { AuthState } from '../api/auth'
 
-type Feature = {
-  icon: string
-  title: string
-  description: string
+type Props = {
+  auth: AuthState | null
 }
 
-const features: Feature[] = [
+const features = [
   {
     icon: '🍽️',
     title: '食事を記録する',
@@ -24,8 +24,16 @@ const features: Feature[] = [
   },
 ]
 
-function HomePage() {
+function HomePage({ auth }: Props) {
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (auth?.logged_in) navigate('/meals', { replace: true })
+  }, [auth, navigate])
+
+  const handleLogin = () => navigate('/login')
+
+  if (auth?.logged_in) return null
 
   return (
     <>
@@ -67,10 +75,10 @@ function HomePage() {
       {/* CTAボタン */}
       <div className="px-6 pb-16 flex flex-col items-center gap-3">
         <button
-          onClick={() => navigate('/meals')}
+          onClick={handleLogin}
           className="w-full max-w-xs bg-green-500 hover:bg-green-600 active:scale-95 text-white text-lg font-bold py-4 rounded-full shadow-lg transition-all duration-200"
         >
-          はじめる →
+          ログインして始める →
         </button>
         <p className="text-gray-400 text-xs">無料でお使いいただけます</p>
       </div>

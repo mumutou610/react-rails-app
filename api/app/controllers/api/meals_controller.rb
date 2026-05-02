@@ -1,10 +1,10 @@
 module Api
-  class MealsController < ApplicationController
+  class MealsController < BaseController
+    before_action :require_login
     before_action :set_meal, only: [ :show, :update, :destroy ]
 
     def index
-      meals = Meal.order(eaten_at: :desc)
-      render json: meals
+      render json: current_user.meals.order(eaten_at: :desc)
     end
 
     def show
@@ -12,7 +12,7 @@ module Api
     end
 
     def create
-      meal = Meal.new(meal_params)
+      meal = current_user.meals.build(meal_params)
       if meal.save
         render json: meal, status: :created
       else
@@ -35,8 +35,14 @@ module Api
 
     private
 
+    def require_login
+      unless current_user
+        render json: { error: "ログインが必要です" }, status: :unauthorized
+      end
+    end
+
     def set_meal
-      @meal = Meal.find(params[:id])
+      @meal = current_user.meals.find(params[:id])
     end
 
     def meal_params

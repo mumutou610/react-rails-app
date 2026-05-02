@@ -28,5 +28,16 @@ module Myapp
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
+
+    config.i18n.default_locale = :ja
+    config.i18n.load_path += Dir[Rails.root.join('config/locales/**/*.yml')]
+
+    # セッション・Cookie・Flash を使えるようにする（Devise のHTML画面用）
+    config.middleware.use ActionDispatch::Cookies
+    config.middleware.use ActionDispatch::Session::CookieStore,
+                          key: '_app_session',
+                          same_site: :lax,
+                          secure: false
+    config.middleware.use ActionDispatch::Flash
   end
 end

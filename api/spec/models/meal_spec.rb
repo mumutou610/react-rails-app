@@ -22,4 +22,11 @@ RSpec.describe Meal, type: :model do
       expect(build(:meal, ai_feedback: nil)).to be_valid
     end
   end
+
+  describe 'アソシエーション' do
+    it 'userに属する' do
+      meal = create(:meal)
+      expect(meal.user).to be_a(User)
+    end
+  end
 end
