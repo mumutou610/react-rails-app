@@ -3,8 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import MealCard from './MealCard'
 import { fetchMeals } from '../api/meals'
 import type { Meal } from '../types/meal'
+import type { FlashType } from '../App'
 
-function MealList() {
+type Props = {
+  showFlash: (messages: string[], type?: FlashType) => void
+}
+
+function MealList({ showFlash }: Props) {
   const [meals, setMeals] = useState<Meal[]>([])
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
@@ -57,6 +62,7 @@ function MealList() {
               key={meal.id}
               meal={meal}
               onDeleted={loadMeals}
+              showFlash={showFlash}
             />
           ))}
         </div>

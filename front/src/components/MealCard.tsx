@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom'
 import { deleteMeal } from '../api/meals'
 import type { Meal } from '../types/meal'
+import type { FlashType } from '../App'
 
 type Props = {
   meal: Meal
   onDeleted: () => void
+  showFlash: (messages: string[], type?: FlashType) => void
 }
 
 const formatDate = (dateStr: string): string => {
@@ -12,13 +14,18 @@ const formatDate = (dateStr: string): string => {
   return `${y}年${parseInt(m)}月${parseInt(d)}日`
 }
 
-function MealCard({ meal, onDeleted }: Props) {
+function MealCard({ meal, onDeleted, showFlash }: Props) {
   const navigate = useNavigate()
 
   const handleDelete = async () => {
     if (!window.confirm(`「${meal.description}」を削除しますか？`)) return
-    await deleteMeal(meal.id)
-    onDeleted()
+    try {
+      await deleteMeal(meal.id)
+      showFlash(['食事記録を削除しました'], 'success')
+      onDeleted()
+    } catch {
+      showFlash(['削除に失敗しました。再度お試しください。'], 'error')
+    }
   }
 
   return (
