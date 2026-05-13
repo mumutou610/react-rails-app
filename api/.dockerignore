@@ -40,3 +40,11 @@
 # Ignore Docker-related files
 /.dockerignore
 /Dockerfile*
+
+# Ignore test and lint config
+/spec
+/.rspec
+/.rubocop.yml
+
+# Ignore pre-installed gems (Docker will reinstall)
+/vendor/bundle
