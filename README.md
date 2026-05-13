@@ -63,12 +63,11 @@ rails-react-app/
 git clone <リポジトリURL>
 cd rails-react-app
 
-# 2. コンテナを起動
-docker compose up
-
-# 3. 別ターミナルでDBマイグレーション（初回のみ）
-docker compose exec api rails db:create db:migrate
+# 2. セットアップスクリプトを実行（初回のみ）
+bash setup.sh
 ```
+
+コンテナのビルド・起動・DBマイグレーションまで自動で行います。
 
 ### アクセス先
 
