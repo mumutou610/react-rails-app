@@ -1,0 +1,48 @@
+# ---- Build stage ----
+FROM ruby:3.2-slim AS builder
+
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y \
+      build-essential \
+      default-libmysqlclient-dev \
+      git \
+      pkg-config \
+      libyaml-dev \
+    && rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+WORKDIR /myapp
+
+COPY Gemfile Gemfile.lock ./
+
+RUN bundle config set --local deployment true && \
+    bundle config set --local without 'development test' && \
+    bundle install --jobs 4 --retry 3
+
+COPY . .
+
+# ---- Runtime stage ----
+FROM ruby:3.2-slim AS runtime
+
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y \
+      default-mysql-client \
+      libyaml-dev \
+      curl \
+    && rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+WORKDIR /myapp
+
+COPY --from=builder /myapp /myapp
+
+ENV RAILS_ENV=production
+ENV RAILS_LOG_TO_STDOUT=true
+ENV BUNDLE_PATH=/myapp/vendor/bundle
+ENV BUNDLE_WITHOUT=development:test
+ENV BUNDLE_DEPLOYMENT=1
+
+EXPOSE 3000
+
+COPY entrypoint.prod.sh /usr/bin/entrypoint.sh
+RUN chmod +x /usr/bin/entrypoint.sh
+ENTRYPOINT ["entrypoint.sh"]
+CMD ["bundle", "exec", "puma", "-C", "config/puma.rb"]

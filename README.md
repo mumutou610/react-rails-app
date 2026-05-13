@@ -1,219 +1,138 @@
-# Rails API + React + Vite (Docker)
+# AI食事管理アプリ
 
-Ruby on Rails 7 (API mode) + React + Vite + MySQL 8.0 の開発環境です。
+Ruby on Rails 7 (API mode) + React (Vite / TypeScript) + MySQL による食事記録Webアプリです。
+
+## 機能
+
+- ユーザー登録・ログイン・ログアウト（セッション認証）
+- 食事記録の作成・一覧・削除（CRUD）
+- バリデーションエラーの日本語表示
+- フラッシュメッセージ（画面上部）
+- パスワード表示/非表示トグル
+
+## 技術スタック
+
+| レイヤー | 技術 |
+|---------|------|
+| バックエンド | Ruby on Rails 7.2 (API mode) |
+| フロントエンド | React 18 + Vite + TypeScript |
+| 認証 | Devise + セッションCookie |
+| DB | MySQL 8.0 |
+| 開発環境 | Docker / Docker Compose |
 
 ## ディレクトリ構成
 
 ```
 rails-react-app/
 ├── docker-compose.yml
-├── setup.sh          # 初回セットアップスクリプト
-├── api/              # Rails API
+├── api/                          # Rails API
 │   ├── Dockerfile
-│   ├── Gemfile
-│   ├── Gemfile.lock
-│   └── entrypoint.sh
-└── front/            # React + Vite
-    ├── Dockerfile
-    ├── package.json
-    ├── vite.config.js
-    ├── index.html
+│   ├── Dockerfile.prod           # 本番用（ECSデプロイ向け）
+│   ├── app/
+│   │   └── controllers/api/
+│   │       ├── sessions_controller.rb      # ログイン・ログアウト
+│   │       ├── registrations_controller.rb # 新規登録
+│   │       ├── meals_controller.rb         # 食事記録CRUD
+│   │       └── users_controller.rb         # ログイン状態確認
+│   └── db/schema.rb
+└── front/                        # React + Vite
     └── src/
-        ├── main.jsx
-        └── App.jsx
+        ├── App.tsx
+        ├── components/
+        │   ├── LoginPage.tsx
+        │   ├── SignupPage.tsx
+        │   ├── MealList.tsx
+        │   ├── MealForm.tsx
+        │   └── Header.tsx
+        └── api/
+            ├── auth.ts
+            └── meals.ts
 ```
 
-## ポート
+## ローカル開発環境のセットアップ
 
-| サービス | ポート |
-|---------|--------|
-| Rails API | http://localhost:3000 |
-| React (Vite) | http://localhost:5173 |
-| MySQL | localhost:3306 |
+### 前提条件
 
----
+- Docker
+- Docker Compose
 
-## 初回セットアップ（初めて起動するとき）
-
-### 方法1: セットアップスクリプトを使う（推奨）
+### 手順
 
 ```bash
+# 1. リポジトリをクローン
+git clone <リポジトリURL>
 cd rails-react-app
-bash setup.sh
-```
 
-スクリプトが以下を自動実行します:
-1. Dockerイメージのビルド
-2. `rails new` で Rails API アプリを作成
-3. `database.yml` の設定（Docker向け）
-4. `rack-cors` の有効化
-5. `cors.rb` の設定
-6. データベースの作成
-
-### 方法2: 手動でセットアップ
-
-```bash
-# 1. イメージをビルド
-docker compose build
-
-# 2. Rails アプリを作成
-docker compose run --no-deps --rm api rails new . --force --database=mysql --api --skip-git
-
-# 3. database.yml を編集（以下の内容に書き換え）
-```
-
-`api/config/database.yml` を以下の内容にする:
-
-```yaml
-default: &default
-  adapter: mysql2
-  encoding: utf8mb4
-  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  username: root
-  password: <%= ENV['DATABASE_PASSWORD'] %>
-  host: <%= ENV.fetch('DATABASE_HOST') { 'db' } %>
-
-development:
-  <<: *default
-  database: app_development
-
-test:
-  <<: *default
-  database: app_test
-```
-
-```bash
-# 4. Gemfile の rack-cors を有効化
-# api/Gemfile の下記行のコメントを外す
-#   # gem "rack-cors"  →  gem "rack-cors"
-
-# 5. cors.rb を設定（api/config/initializers/cors.rb）
-```
-
-`api/config/initializers/cors.rb`:
-
-```ruby
-Rails.application.config.middleware.insert_before 0, Rack::Cors do
-  allow do
-    origins ENV.fetch('CORS_ORIGINS', 'http://localhost:5173')
-
-    resource '*',
-      headers: :any,
-      methods: [:get, :post, :put, :patch, :delete, :options, :head]
-  end
-end
-```
-
-```bash
-# 6. 再ビルドしてDBを作成
-docker compose build api
-docker compose run --rm api rails db:create
-```
-
----
-
-## 通常の起動・停止
-
-```bash
-# 起動
+# 2. コンテナを起動
 docker compose up
 
-# バックグラウンドで起動
+# 3. 別ターミナルでDBマイグレーション（初回のみ）
+docker compose exec api rails db:create db:migrate
+```
+
+### アクセス先
+
+| サービス | URL |
+|---------|-----|
+| React (フロント) | http://localhost:5173 |
+| Rails API | http://localhost:3000 |
+
+## よく使うコマンド
+
+```bash
+# コンテナ起動
+docker compose up
+
+# バックグラウンド起動
 docker compose up -d
 
 # 停止
 docker compose down
 
-# 停止 + DBデータも削除
+# DBデータごと削除
 docker compose down -v
-```
 
----
-
-## よく使うコマンド
-
-### Rails
-
-```bash
 # マイグレーション
-docker compose run --rm api rails db:migrate
+docker compose exec api rails db:migrate
 
-# コンソール
-docker compose run --rm api rails console
+# Railsコンソール
+docker compose exec api rails console
 
-# ジェネレーター
-docker compose run --rm api rails generate model User name:string
-
-# Bundleインストール（Gemfile変更後）
-docker compose run --rm api bundle install
-docker compose build api
-```
-
-### React / Vite
-
-```bash
-# パッケージ追加（例: axios）
-docker compose run --rm front npm install axios
-
-# フロント側のログ確認
+# ログ確認
+docker compose logs -f api
 docker compose logs -f front
 ```
 
----
-
-## ヘルスチェックエンドポイント（任意）
-
-フロントから API に疎通確認する場合、Rails 側に以下を追加する:
-
-`api/config/routes.rb`:
-
-```ruby
-Rails.application.routes.draw do
-  namespace :api do
-    get 'health', to: proc { [200, { 'Content-Type' => 'application/json' }, ['{"status":"ok"}']] }
-  end
-end
-```
-
-確認:
-```bash
-curl http://localhost:3000/api/health
-# => {"status":"ok"}
-```
-
----
-
 ## 環境変数
+
+docker-compose.yml にデフォルト値が設定されているため、ローカル開発では追加設定不要です。
 
 | 変数 | デフォルト値 | 説明 |
 |------|-------------|------|
-| `DATABASE_HOST` | `db` | MySQL ホスト |
-| `DATABASE_PASSWORD` | `password` | MySQL rootパスワード |
+| `DATABASE_HOST` | `db` | MySQLホスト |
+| `DATABASE_PASSWORD` | `password` | MySQLパスワード |
 | `CORS_ORIGINS` | `http://localhost:5173` | CORS許可オリジン |
-| `VITE_API_URL` | `http://localhost:3000` | フロントからのAPI URL |
-
----
+| `FRONTEND_URL` | `http://localhost:5173` | フロントエンドURL |
+| `VITE_API_URL` | `http://localhost:3000` | APIのベースURL |
 
 ## トラブルシューティング
 
-### DB接続エラーが出る場合
+### DBに接続できない
 
 ```bash
-# DB コンテナが起動しているか確認
-docker compose ps
-
-# ヘルスチェックが通るまで待ってから再試行
 docker compose up db
+# dbが起動してからapiを起動する
+docker compose up api front
 ```
 
-### `server.pid` エラーで Rails が起動しない場合
+### `server.pid` エラーで Rails が起動しない
 
 ```bash
 rm api/tmp/pids/server.pid
-docker compose up api
+docker compose up
 ```
 
-### node_modules が古い場合
+### node_modules が壊れている
 
 ```bash
 docker compose down -v
